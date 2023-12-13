@@ -1,144 +1,98 @@
-class Node {
-  value: number;
-  next: Node | null = null;
+class ListNode<T> {
+  public next: ListNode<T> | null = null;
+  public prev: ListNode<T> | null = null;
+  constructor(public data: T) {}
+}
 
-  constructor(value: number) {
-    this.value = value;
+interface ILinkedList<T> {
+  insertInBegin(data: T): ListNode<T>;
+  insertAtEnd(data: T): ListNode<T>;
+  deleteNode(node: ListNode<T>): void;
+  traverse(): T[];
+  size(): number;
+  search(comparator: (data: T) => boolean): ListNode<T> | null;
+}
+
+class LinkedList<T> implements ILinkedList<T> {
+  private head: ListNode<T> | null = null;
+
+  public insertAtEnd(data: T): ListNode<T> {
+    const node = new ListNode(data);
+    if (!this.head) {
+      this.head = node;
+    } else {
+      const getLast = (node: ListNode<T>): ListNode<T> => {
+        return node.next ? getLast(node.next) : node;
+      };
+
+      const lastNode = getLast(this.head);
+      node.prev = lastNode;
+      lastNode.next = node;
+    }
+    return node;
+  }
+
+  public insertInBegin(data: T): ListNode<T> {
+    const node = new ListNode(data);
+    if (!this.head) {
+      this.head = node;
+    } else {
+      this.head.prev = node;
+      node.next = this.head;
+      this.head = node;
+    }
+    return node;
+  }
+
+  public deleteNode(node: ListNode<T>): void {
+    if (!node.prev) {
+      this.head = node.next;
+    } else {
+      const prevNode = node.prev;
+      prevNode.next = node.next;
+    }
+  }
+
+  public search(comparator: (data: T) => boolean): ListNode<T> | null {
+    const checkNext = (node: ListNode<T>): ListNode<T> | null => {
+      if (comparator(node.data)) {
+        return node;
+      }
+      return node.next ? checkNext(node.next) : null;
+    };
+
+    return this.head ? checkNext(this.head) : null;
+  }
+
+  public traverse(): T[] {
+    const array: T[] = [];
+    if (!this.head) {
+      return array;
+    }
+
+    const addToArray = (node: ListNode<T>): T[] => {
+      array.push(node.data);
+      return node.next ? addToArray(node.next) : array;
+    };
+    return addToArray(this.head);
+  }
+
+  public size(): number {
+    return this.traverse().length;
   }
 }
 
-class SinglyLinkedList {
-  head: Node | null = null;
-  size: number = 0;
-
-  display() {
-    if (!this.head) {
-      console.log('Linked list is empty!')
-    }
-
-    let current = this.head;
-    while (current) {
-      console.log(current.value);
-      current = current.next;
-    }
-  }
-
-  insertAtEnd(value: number) {
-    const newNode = new Node(value);
-    if (!this.head) {
-      this.head = newNode;
-      this.size++;
-      return;
-    }
-
-    let current = this.head;
-    while (current.next) {
-      current = current.next;
-    }
-
-    current.next = newNode;
-    this.size++;
-  }
-
-  insertAtBegin(value: number) {
-    const newNode = new Node(value);
-
-    if (!this.head) {
-      this.head = newNode;
-      this.size++;
-      return;
-    }
-
-    newNode.next = this.head;
-    this.head = newNode;
-    this.size++;
-  }
-
-  insertAtIndex(value: number, index: number) {
-    if (index > this.size) {
-      console.log('Linked list does not have that index!');
-    }
-    
-    if (index === 0) {
-      insertAtBegin(value);
-    }
-
-    if (index === this.size) {
-      insertAtEnd(value);
-    }
-
-    const newNode = new Node(value);
-    let current = this.head;
-    let i = 0;
-    while (current.next) {
-      if (i === index - 1) {
-        let nextNode = current.next;
-        current.next = newNode;
-        newNode.next = nextNode;
-        this.size++;
-        break;
-      } else {
-        current = current.next;
-        i++;
-      }
-    }
-  }
-
-  removeAtEnd() {
-    let current = this.head;
-
-    if (!this.head) {
-      console.log('List is empty');
-    }
-
-    while(current.next.next) {
-      current = current.next;
-    }
-
-    current.next = null;
-    this.size--;
-  }
-
-  removeAtBegin() {
-    this.head = this.head.next;
-    this.size--;
-  }
-
-  removeAtIndex(index: number) {
-    if (index > this.size) {
-      console.log('Linked list does not have that index!');
-    }
-
-    if (index === 0) {
-      removeAtBegin();
-    }
-
-    if (index === this.size) {
-      removeAtEnd();
-    }
-    
-    let current = this.head;
-    let i = 0;
-    while (current.next) {
-      if (index - 1 === i) {
-        current.next = current.next.next;
-        this.size--;
-        break;
-      } else {
-        i++;
-        current = current.next;
-      }
-    }
-  }
+interface Post {
+  title: string;
 }
+const linkedList = new LinkedList<Post>();
 
-const LL = new SinglyLinkedList();
-LL.insertAtEnd(255);
-LL.insertAtEnd(22);
-LL.insertAtEnd(11);
-LL.insertAtEnd(12);
-LL.insertAtEnd(13);
-LL.insertAtEnd(14);
-LL.insertAtEnd(15);
-LL.removeAtIndex(4);
-LL.display();
+linkedList.traverse() // [];
+
+linkedList.insertAtEnd({ title: "Post A" });
+linkedList.insertAtEnd({ title: "Post B" });
+linkedList.insertInBegin({ title: "Post C" });
+linkedList.insertInBegin({ title: "Post D" });
+
+linkedList.traverse() // [{ title : "Post D" }, { title : "Post C" }, { title : "Post A" }, { title : "Post B" }];
+linkedList.search(({ title }) => title === "Post A") // Node { data: { title: "Post A" }, prev: Node, next: Node};
